@@ -1,0 +1,17 @@
+# Archivos de Python
+__pycache__/
+*.pyc
+
+# Datos de entrada y resultados generados por el pipeline
+# (suelen pesar mucho y no hace falta llevarlos en GitHub)
+data/
+results/
+
+# Entornos virtuales / conda
+.venv/
+venv/
+env/
+
+# Archivos propios del sistema operativo
+.DS_Store
+Thumbs.db

@@ -1,0 +1,67 @@
+# Input files. These files must exist inside the data/ folder.
+paths:
+  dataset_file: Dataset.xlsx
+  protein_file: 1M17.pdb
+
+# Output names generated inside the results/ folder.
+# Change these only if you want to keep separate runs without overwriting results.
+outputs:
+  curated_dataset: Dataset_curated.xlsx
+  filtered_dataset: Dataset_filtered.xlsx
+  clustered_dataset: Dataset_clustered.xlsx
+  selected_dataset: Dataset_selected.xlsx
+  cluster_plot: clusters_2d.png
+  prepared_ligands: Ligands_prep.sdf
+  pdbqt_ligands_dir: pdbqt_ligands
+  clean_protein: 1M17_clean.pdb
+  fixed_protein: 1M17_fixed.pdb
+  receptor_pdbqt: 1M17_fixed.pdbqt
+  binding_site: binding_site.txt
+  docking_poses_dir: docking_poses
+  docking_results: docking_results.xlsx
+  summary: pipeline_summary.txt
+
+# Conda environment used only for protein cleaning/repair.
+environments:
+  docking_env_name: docking_env
+
+protein:
+  # Three-letter residue code of the co-crystallized ligand in the PDB.
+  ligand_resname: AQ4
+
+  # Docking box margin around the original ligand, in Angstroms.
+  # Lower values = tighter box; higher values = broader search region.
+  padding_angstroms: 8.0
+
+  # pH used by PDBFixer when adding hydrogens.
+  hydrogenation_ph: 7.4
+
+clustering:
+  # Tanimoto similarity threshold for Butina clustering.
+  # Lower values = broader clusters; higher values = stricter clusters.
+  similarity_threshold: 0.7
+
+  # Clusters with this number of molecules or fewer keep all compounds.
+  # Larger clusters keep only their representative molecule.
+  max_cluster_size: 10
+
+tools:
+  # External command names. They must work from the terminal/PATH.
+  obabel: obabel
+  prepare_receptor: prepare_receptor
+  vina: vina_1.2.7_win.exe
+
+docking:
+  # Vina search exhaustiveness.
+  # 8 = fast/default for first-pass screening.
+  # 16 = slower and more careful.
+  # 32 = much slower, useful for top hits or a final run.
+  exhaustiveness: 8
+
+  # CPU threads used by Vina.
+  # 4 = conservative; 8 = faster on many PCs; 16 = only if your machine has enough cores.
+  cpu: 8
+
+  # Number of new ligands to dock in one run.
+  # Use a small integer for testing, for example 10; use null to dock all remaining ligands.
+  max_ligands: null
