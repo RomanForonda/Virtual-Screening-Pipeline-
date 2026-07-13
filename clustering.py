@@ -1,11 +1,15 @@
 # Fingerprint-based diversity selection with Tanimoto similarity and Butina clustering.
 
 import os
+from pathlib import Path
 
-os.environ.setdefault(
-    "MPLCONFIGDIR",
-    os.path.join("results", ".matplotlib_cache")
+matplotlib_cache_dir = (
+    Path(__file__).resolve().parent
+    / "results"
+    / ".matplotlib_cache"
 )
+matplotlib_cache_dir.mkdir(parents=True, exist_ok=True)
+os.environ["MPLCONFIGDIR"] = str(matplotlib_cache_dir)
 
 import numpy as np
 import pandas as pd
@@ -18,7 +22,6 @@ import matplotlib.pyplot as plt
 from rdkit import Chem
 from rdkit import DataStructs
 from rdkit.Chem import rdFingerprintGenerator
-from rdkit.ML.Cluster import Butina
 from sklearn.decomposition import PCA
 
 
@@ -35,31 +38,75 @@ def generate_fingerprints(mols):
     ]
 
 
-def calculate_distance_matrix(fps):
-
-    dists = []
+def calculate_neighbor_lists(fps, similarity_threshold):
+    neighbor_lists = [
+        [idx]
+        for idx in range(len(fps))
+    ]
 
     for i in range(1, len(fps)):
-
-        similarities = (
-            DataStructs.BulkTanimotoSimilarity(
-                fps[i],
-                fps[:i]
-            )
+        similarities = DataStructs.BulkTanimotoSimilarity(
+            fps[i],
+            fps[:i]
         )
 
-        dists.extend(
-            [1 - sim for sim in similarities]
+        for j, similarity in enumerate(similarities):
+            if similarity >= similarity_threshold:
+                neighbor_lists[i].append(j)
+                neighbor_lists[j].append(i)
+
+    return neighbor_lists
+
+
+def cluster_from_neighbor_lists(neighbor_lists):
+    sorted_indices = [
+        (len(neighbors), idx)
+        for idx, neighbors in enumerate(neighbor_lists)
+    ]
+    sorted_indices.sort(reverse=True)
+
+    clusters = []
+    seen = np.zeros(
+        len(neighbor_lists),
+        dtype=bool
+    )
+
+    while sorted_indices and sorted_indices[0][0] > 1:
+        _, idx = sorted_indices.pop(0)
+
+        if seen[idx]:
+            continue
+
+        cluster = [idx]
+        seen[idx] = True
+
+        for neighbor in neighbor_lists[idx]:
+            if not seen[neighbor]:
+                cluster.append(neighbor)
+                seen[neighbor] = True
+
+        clusters.append(
+            tuple(cluster)
         )
 
-    return dists
+    while sorted_indices:
+        _, idx = sorted_indices.pop(0)
+
+        if seen[idx]:
+            continue
+
+        clusters.append(
+            (idx,)
+        )
+
+    return tuple(clusters)
 
 
 def fingerprints_to_array(fps):
 
     fp_array = np.zeros(
         (len(fps), fps[0].GetNumBits()),
-        dtype=int
+        dtype=np.uint8
     )
 
     for idx, fp in enumerate(fps):
@@ -253,30 +300,27 @@ def cluster_molecules(
     )
 
     # -------------------------
-    # Tanimoto distances
+    # Tanimoto neighbor lists
     # -------------------------
 
-    dists = calculate_distance_matrix(
-        fps
+    neighbor_lists = calculate_neighbor_lists(
+        fps,
+        similarity_threshold
     )
 
     print(
-        "Distances calculated."
+        "Similarity neighbors calculated."
     )
 
     # -------------------------
-    # Butina clustering groups molecules based on their distances.
+    # Butina clustering groups molecules based on their neighbors.
+    # RDKit's current Python implementation expands the triangular
+    # distance list into a full n x n matrix, which is too memory-heavy
+    # for larger screening libraries.
     # -------------------------
 
-    cutoff = (
-        1 - similarity_threshold
-    )
-
-    clusters = Butina.ClusterData(
-        dists,
-        len(fps),
-        cutoff,
-        isDistData=True
+    clusters = cluster_from_neighbor_lists(
+        neighbor_lists
     )
 
     print(

@@ -63,10 +63,35 @@ def curate_data(input_file, output_file):
 
     df = pd.read_excel(input_path)
 
-    if "smiles" not in df.columns:
+    smiles_column = next(
+        (
+            column
+            for column in df.columns
+            if str(column).strip().lower() == "smiles"
+        ),
+        None
+    )
+
+    if smiles_column is None:
         raise ValueError(
-            "The input file must contain a column named 'smiles'."
+            "The input file must contain a SMILES column, for example "
+            "'smiles' or 'SMILES'."
         )
+
+    if smiles_column != "smiles":
+        df = df.rename(columns={smiles_column: "smiles"})
+
+    id_column = next(
+        (
+            column
+            for column in df.columns
+            if str(column).strip().lower() == "id"
+        ),
+        None
+    )
+
+    if id_column is not None and id_column != "id":
+        df = df.rename(columns={id_column: "id"})
 
     original_count = len(df)
 

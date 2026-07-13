@@ -11,11 +11,23 @@ def prepare_ligands(input_file, output_file):
 
     df = pd.read_excel(input_path)
 
-    if "id" not in df.columns:
+    id_column = next(
+        (
+            column
+            for column in df.columns
+            if str(column).strip().lower() == "id"
+        ),
+        None
+    )
+
+    if id_column is None:
         raise ValueError(
-            "The input file must contain a column named 'id' so the original "
+            "The input file must contain a column named 'id' or 'ID' so the original "
             "compound identifier can be preserved."
         )
+
+    if id_column != "id":
+        df = df.rename(columns={id_column: "id"})
 
     print(f"\nMolecules read: {len(df)}")
 

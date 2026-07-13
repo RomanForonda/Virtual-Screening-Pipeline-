@@ -1,15 +1,15 @@
 # Input files. These files must exist inside the data/ folder.
 paths:
-  dataset_file: Dataset.xlsx
+  dataset_file: DK-OPENSCREEN.xlsx
   protein_file: 1M17.pdb
 
 # Output names generated inside the results/ folder.
 # Change these only if you want to keep separate runs without overwriting results.
 outputs:
-  curated_dataset: Dataset_curated.xlsx
-  filtered_dataset: Dataset_filtered.xlsx
-  clustered_dataset: Dataset_clustered.xlsx
-  selected_dataset: Dataset_selected.xlsx
+  curated_dataset: DK-OPENSCREEN_curated.xlsx
+  filtered_dataset: DK-OPENSCREEN_filtered.xlsx
+  clustered_dataset: DK-OPENSCREEN_clustered.xlsx
+  selected_dataset: DK-OPENSCREEN_selected.xlsx
   cluster_plot: clusters_2d.png
   prepared_ligands: Ligands_prep.sdf
   pdbqt_ligands_dir: pdbqt_ligands
@@ -39,11 +39,11 @@ protein:
 clustering:
   # Tanimoto similarity threshold for Butina clustering.
   # Lower values = broader clusters; higher values = stricter clusters.
-  similarity_threshold: 0.7
+  similarity_threshold: 0.5
 
   # Clusters with this number of molecules or fewer keep all compounds.
   # Larger clusters keep only their representative molecule.
-  max_cluster_size: 10
+  max_cluster_size: 5
 
 tools:
   # External command names. They must work from the terminal/PATH.
@@ -64,4 +64,4 @@ docking:
 
   # Number of new ligands to dock in one run.
   # Use a small integer for testing, for example 10; use null to dock all remaining ligands.
-  max_ligands: null
+  max_ligands: 10
