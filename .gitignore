@@ -1,6 +1,7 @@
 # Archivos de Python
 __pycache__/
 *.pyc
+.matplotlib_cache/
 
 # Datos de entrada y resultados generados por el pipeline
 # (suelen pesar mucho y no hace falta llevarlos en GitHub)

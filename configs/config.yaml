@@ -1,15 +1,15 @@
 # Input files. These files must exist inside the data/ folder.
 paths:
-  dataset_file: DK-OPENSCREEN.xlsx
-  protein_file: 1M17.pdb
+  dataset_file: DK-OPENSCREEN_100.xlsx
+  protein_file: 4O1P.pdb
 
 # Output names generated inside the results/ folder.
 # Change these only if you want to keep separate runs without overwriting results.
 outputs:
-  curated_dataset: DK-OPENSCREEN_curated.xlsx
-  filtered_dataset: DK-OPENSCREEN_filtered.xlsx
-  clustered_dataset: DK-OPENSCREEN_clustered.xlsx
-  selected_dataset: DK-OPENSCREEN_selected.xlsx
+  curated_dataset: DK-OPENSCREEN_100_curated.xlsx
+  filtered_dataset: DK-OPENSCREEN_100_filtered.xlsx
+  clustered_dataset: DK-OPENSCREEN_100_clustered.xlsx
+  selected_dataset: DK-OPENSCREEN_100_selected.xlsx
   cluster_plot: clusters_2d.png
   prepared_ligands: Ligands_prep.sdf
   pdbqt_ligands_dir: pdbqt_ligands
@@ -27,7 +27,7 @@ environments:
 
 protein:
   # Three-letter residue code of the co-crystallized ligand in the PDB.
-  ligand_resname: AQ4
+  ligand_resname: 25L
 
   # Docking box margin around the original ligand, in Angstroms.
   # Lower values = tighter box; higher values = broader search region.

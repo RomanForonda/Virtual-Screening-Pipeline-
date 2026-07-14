@@ -5,7 +5,6 @@ from pathlib import Path
 
 matplotlib_cache_dir = (
     Path(__file__).resolve().parent
-    / "results"
     / ".matplotlib_cache"
 )
 matplotlib_cache_dir.mkdir(parents=True, exist_ok=True)
@@ -16,8 +15,6 @@ import pandas as pd
 import matplotlib
 
 matplotlib.use("Agg")
-
-import matplotlib.pyplot as plt
 
 from rdkit import Chem
 from rdkit import DataStructs
@@ -190,6 +187,8 @@ def save_cluster_plot(df, plot_path):
 
     if len(df) == 0:
         return
+
+    import matplotlib.pyplot as plt
 
     plt.figure(figsize=(10, 8))
 
