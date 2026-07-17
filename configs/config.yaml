@@ -1,21 +1,21 @@
 # Input files. These files must exist inside the data/ folder.
 paths:
-  dataset_file: DK-OPENSCREEN_100.xlsx
+  dataset_file: DK-OPENSCREEN.xlsx
   protein_file: 4O1P.pdb
 
 # Output names generated inside the results/ folder.
 # Change these only if you want to keep separate runs without overwriting results.
 outputs:
-  curated_dataset: DK-OPENSCREEN_100_curated.xlsx
-  filtered_dataset: DK-OPENSCREEN_100_filtered.xlsx
-  clustered_dataset: DK-OPENSCREEN_100_clustered.xlsx
-  selected_dataset: DK-OPENSCREEN_100_selected.xlsx
+  curated_dataset: DK-OPENSCREEN_curated.xlsx
+  filtered_dataset: DK-OPENSCREEN_filtered.xlsx
+  clustered_dataset: DK-OPENSCREEN_clustered.xlsx
+  selected_dataset: DK-OPENSCREEN_selected.xlsx
   cluster_plot: clusters_2d.png
   prepared_ligands: Ligands_prep.sdf
   pdbqt_ligands_dir: pdbqt_ligands
-  clean_protein: 1M17_clean.pdb
-  fixed_protein: 1M17_fixed.pdb
-  receptor_pdbqt: 1M17_fixed.pdbqt
+  clean_protein: 4O1P_clean.pdb
+  fixed_protein: 4O1P_fixed.pdb
+  receptor_pdbqt: 4O1P_fixed.pdbqt
   binding_site: binding_site.txt
   docking_poses_dir: docking_poses
   docking_results: docking_results.xlsx
@@ -39,29 +39,33 @@ protein:
 clustering:
   # Tanimoto similarity threshold for Butina clustering.
   # Lower values = broader clusters; higher values = stricter clusters.
-  similarity_threshold: 0.5
+  similarity_threshold: 0.6
 
   # Clusters with this number of molecules or fewer keep all compounds.
   # Larger clusters keep only their representative molecule.
-  max_cluster_size: 5
+  max_cluster_size: 4
 
 tools:
   # External command names. They must work from the terminal/PATH.
   obabel: obabel
-  prepare_receptor: prepare_receptor
-  vina: vina_1.2.7_win.exe
+  prepare_receptor: 'C:\Program Files (x86)\ADFRsuite-1.0\bin\prepare_receptor.bat'
+  vina: 'C:\Users\rofor\Vina\vina_1.2.7_win.exe'
 
 docking:
   # Vina search exhaustiveness.
   # 8 = fast/default for first-pass screening.
   # 16 = slower and more careful.
   # 32 = much slower, useful for top hits or a final run.
-  exhaustiveness: 8
+  exhaustiveness: 4
 
   # CPU threads used by Vina.
   # 4 = conservative; 8 = faster on many PCs; 16 = only if your machine has enough cores.
-  cpu: 8
+  cpu: 4
+
+  # Number of parallel Vina processes to run concurrently. Set to null to
+  # auto-calculate based on available CPUs and `cpu` per process.
+  parallel_jobs: null
 
   # Number of new ligands to dock in one run.
   # Use a small integer for testing, for example 10; use null to dock all remaining ligands.
-  max_ligands: 10
+  max_ligands: 100

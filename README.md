@@ -84,7 +84,7 @@ Clone the repository:
 
 ```bash
 git clone <your-repo-url>
-cd VS_pipeline
+cd Virtual_Screening_Pipeline
 ```
 
 Create the Conda environments:

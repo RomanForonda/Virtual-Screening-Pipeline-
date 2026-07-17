@@ -2,6 +2,7 @@ import os
 import glob
 import subprocess
 import pandas as pd
+import concurrent.futures
 
 
 # -------------------------------------------------------------
@@ -46,6 +47,7 @@ def settings_from_config(config):
         "results_excel": os.path.join("results", paths["docking_results"]),
         "exhaustiveness": docking["exhaustiveness"],
         "cpu": docking["cpu"],
+        "parallel_jobs": docking.get("parallel_jobs"),
         "max_ligands": docking["max_ligands"],
     }
 
@@ -60,6 +62,7 @@ def default_settings():
         "results_excel": RESULTS_EXCEL,
         "exhaustiveness": EXHAUSTIVENESS,
         "cpu": CPU,
+        "parallel_jobs": None,
         "max_ligands": MAX_LIGANDS,
     }
 
@@ -159,33 +162,58 @@ def run_docking(config=None):
         print(f"Docking limit for this run: {settings['max_ligands']} new ligands")
 
     results = []
-    docked_this_run = 0
 
-    for i, ligand_path in enumerate(ligand_files, start=1):
-
-        if (
-            settings["max_ligands"] is not None
-            and docked_this_run >= settings["max_ligands"]
-        ):
-            print(
-                f"\nReached max_ligands={settings['max_ligands']}; "
-                "stopping this run."
-            )
-            break
-
+    # Build list of ligands to process (skip already-docked)
+    pending = []
+    for ligand_path in ligand_files:
         name = os.path.splitext(os.path.basename(ligand_path))[0]
         output_path = os.path.join(settings["output_dir"], f"{name}_out.pdbqt")
-
-        # Per-ligand checkpoint: skip ligands that were already docked.
         if os.path.exists(output_path):
-            print(f"[{i}/{len(ligand_files)}] {name}: already done, skipping.")
+            # already done
             continue
+        pending.append(ligand_path)
 
-        name, affinity = dock_ligand(ligand_path, center, size, settings)
-        print(f"[{i}/{len(ligand_files)}] {name}: {affinity} kcal/mol")
+    total_pending = len(pending)
+    if total_pending == 0:
+        print("No new ligands to dock.")
+    else:
+        # Respect max_ligands limit
+        if settings["max_ligands"] is not None:
+            pending = pending[: settings["max_ligands"]]
+            total_pending = len(pending)
 
-        results.append({"ligand": name, "affinity_kcal_mol": affinity})
-        docked_this_run += 1
+        # Determine parallel jobs: either user-configured or derived from CPUs
+        jobs = settings.get("parallel_jobs")
+        if jobs is None:
+            total_cpus = os.cpu_count() or 1
+            cpu_per_proc = max(1, int(settings.get("cpu", 1)))
+            jobs = max(1, total_cpus // cpu_per_proc)
+
+        jobs = min(jobs, total_pending)
+
+        print(f"Running docking with {jobs} parallel job(s) (cpu per job: {settings.get('cpu')})")
+
+        # Run Vina processes in parallel using ThreadPoolExecutor since we
+        # are launching subprocesses (no heavy Python CPU work required).
+        processed = 0
+        with concurrent.futures.ThreadPoolExecutor(max_workers=jobs) as executor:
+            futures = {
+                executor.submit(dock_ligand, ligand_path, center, size, settings): ligand_path
+                for ligand_path in pending
+            }
+
+            for future in concurrent.futures.as_completed(futures):
+                ligand_path = futures[future]
+                try:
+                    name, affinity = future.result()
+                except Exception as exc:
+                    name = os.path.splitext(os.path.basename(ligand_path))[0]
+                    affinity = None
+                    print(f"Error docking {name}: {exc}")
+
+                processed += 1
+                print(f"[{processed}/{total_pending}] {name}: {affinity} kcal/mol")
+                results.append({"ligand": name, "affinity_kcal_mol": affinity})
 
     # -------------------------------------------------------
     # Save or update the Excel summary.
